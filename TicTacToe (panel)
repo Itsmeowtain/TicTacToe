@@ -1,0 +1,159 @@
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Random;
+import javax.swing.*;
+
+public class TicTacToe extends JPanel implements MouseListener{
+    
+    int x = 500;
+    int y = 500;
+    int MouseX = 0;
+    int MouseY = 0;
+    boolean redPlayerTurn = true;
+    boolean gameOver = false;
+    int currentPlayer = 1;
+    ArrayList<Box> board;
+    
+    Image imgRed,imgBlue;
+    
+    class Box {
+        int player;
+        int boxArea;
+        boolean isOccupied;
+
+      public Box(int player, int boxArea) {
+            this.player = player;
+            this.boxArea = boxArea;
+            isOccupied = false;
+      }
+     public int getBoxArea() { return boxArea; }
+     public int getPlayer() { return player; }
+     public boolean getIsOccupied() { return isOccupied; }
+     public void setToOccupied() { isOccupied = true; }
+     public void setPlayer(int player) { this.player = player; }
+    }
+
+    public TicTacToe(){
+        addMouseListener(this);
+        requestFocusInWindow();
+        setFocusable(true);
+        setPreferredSize(new Dimension(x,y));
+        imgRed = new ImageIcon(getClass().getResource("/RedX.png")).getImage();
+        imgBlue = new ImageIcon(getClass().getResource("/circle.png")).getImage();
+        board = new ArrayList<>();
+        
+       for(int i = 0; i < 9; i++){
+        board.add(i, new Box(0,-1));
+        }
+     System.out.print(board.size());
+    }
+    
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        draw(g);
+    }
+    
+    public void draw(Graphics g){
+        g.drawRect(25,25,350,350);
+        g.drawLine(115+25,0+25,115+25,350+25);//1st vertical line
+        g.drawLine(235+25,0+25,235+25,350+25);//2nd vertical line
+        g.drawLine(25,142,375,142);//1st horizontal line
+        g.drawLine(25,264,375,264);//2nd horizontal line
+         // Draw X's and O's
+        for(int i=0; i<9; i++) {
+            Box b = board.get(i);
+            int col = i % 3;
+            int row = i / 3;
+            int cx = 25 + col * 115 + 15;
+            int cy = 25 + row * 117 + 15;
+            if(b.getIsOccupied()) {
+                if(b.getPlayer() == 1) {
+                    g.drawImage(imgRed, cx, cy, 80, 80, this);
+                } else if(b.getPlayer() == 2) {
+                    g.drawImage(imgBlue, cx, cy, 80, 80, this);
+                }
+            }
+        }
+
+        g.setFont(new Font("Comic Sans",Font.BOLD, 20));
+        if(gameOver) {
+            if(currentPlayer == 1)
+                g.drawString("Game Over: Red player wins!",40,430);
+            else
+                g.drawString("Game Over: Blue player wins!",40,430);
+        } else {
+            if (redPlayerTurn)
+                g.drawString("Red player's turn", 100, 400);
+            else
+                g.drawString("Blue player's turn",100, 400);
+        }
+    }
+    
+    int[][] winPositions = {
+      {0,1,2}, {3,4,5}, {6,7,8}, // rows
+      {0,3,6}, {1,4,7}, {2,5,8}, // columns
+      {0,4,8}, {2,4,6}}; //diagonals
+
+    public boolean checkWinScenario(int player) {
+        for (int[] pos : winPositions) {
+            if (board.get(pos[0]).getPlayer() == player &&
+                board.get(pos[1]).getPlayer() == player &&
+                board.get(pos[2]).getPlayer() == player &&
+                board.get(pos[0]).getIsOccupied() &&
+                board.get(pos[1]).getIsOccupied() &&
+                board.get(pos[2]).getIsOccupied()) {
+                return true;
+            }
+        }
+        return false;
+    }
+     
+    // Returns index or -1 if out of bounds or occupied
+    public int getBoardIndex(int mx, int my) {
+        if(mx < 25 || mx > 375 || my < 25 || my > 375) return -1;
+        int col = (mx - 25) / 115;
+        int row = (my - 25) / 117;
+        int idx = row * 3 + col;
+        if(idx < 0 || idx > 8) return -1;
+        if(board.get(idx).getIsOccupied()) return -1;
+        return idx;
+    }
+     
+     public boolean inBounds(int Mx, int My){
+         if(Mx < 350 && Mx > 25 &&
+            My < 350 && My > 25){
+        return true;
+        }
+        return false;
+     }
+
+    public void mousePressed(MouseEvent arg0) {
+        MouseX = arg0.getX();
+        MouseY = arg0.getY();
+        if(gameOver && arg0.getButton() == MouseEvent.BUTTON1){
+           board.clear();
+          for(int i = 0; i < 9; i++){
+           board.add(i, new Box(0,-1));}
+           repaint();
+           redPlayerTurn = true;
+           gameOver = false;
+           currentPlayer = 1;
+        }
+        if (arg0.getButton() == MouseEvent.BUTTON1){
+            int idx = getBoardIndex(MouseX, MouseY);
+            if(idx != -1) {
+                board.get(idx).setPlayer(redPlayerTurn ? 1 : 2);
+                board.get(idx).setToOccupied();
+                gameOver = checkWinScenario(redPlayerTurn ? 1 : 2);
+                if(!gameOver) redPlayerTurn = !redPlayerTurn;
+            }
+            repaint();
+        }
+    }
+
+    public void mouseClicked(MouseEvent e) {}
+    public void mouseReleased(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {}
+}
